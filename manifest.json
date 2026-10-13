@@ -1,0 +1,10 @@
+{
+  "name": "Solo System - Study Leveling App",
+  "short_name": "Solo System",
+  "description": "Level up CLAT and CBSE Class 12 preparation with quests and dungeons.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#080b15",
+  "theme_color": "#090d1a",
+  "orientation": "portrait"
+}

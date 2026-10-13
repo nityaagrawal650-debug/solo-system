@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#090d1a">
+<meta name="description" content="Solo System: level up your CLAT and CBSE study journey.">
+<link rel="manifest" href="manifest.json">
+<title>SOLO SYSTEM</title>
+<style>
+:root{--bg:#080b15;--panel:#11182a;--panel2:#182238;--line:#293652;--text:#f3f6ff;--muted:#9aa8c5;--blue:#6dd3ff;--purple:#a78bfa;--green:#65e6b3;--red:#ff7b91;--gold:#f7cc75}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#152343 0%,var(--bg) 48%);color:var(--text);font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;min-height:100vh}
+button,input,select{font:inherit}button{cursor:pointer;border:1px solid var(--line);border-radius:12px;background:var(--panel2);color:var(--text);padding:11px 13px;font-weight:650}button.primary{background:linear-gradient(120deg,#267db5,#6152c8);border:0}button:active{transform:scale(.98)}
+.wrap{max-width:820px;margin:auto;padding:18px 14px 100px}.top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:6px 0 18px}.brand{letter-spacing:.18em;font-size:11px;color:var(--blue);font-weight:900}.sub{color:var(--muted);font-size:12px}.rankbox{border:1px solid #637ba7;background:#15203a;padding:10px 16px;border-radius:15px;text-align:center;min-width:72px}.rank{font-size:27px;font-weight:950;line-height:1.1}.hero{border:1px solid #344768;border-radius:22px;padding:20px;background:linear-gradient(140deg,#172544dd,#101526f2);box-shadow:0 18px 55px #0005}.hero h1{font-size:clamp(25px,7vw,39px);line-height:1.04;margin:7px 0}.hero p{color:#c3cee5;margin:8px 0 0}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:17px}.stat{padding:12px;border-radius:14px;background:#0b1120;border:1px solid #263653}.stat b{display:block;font-size:20px}.stat span{font-size:11px;color:var(--muted)}.bar{height:8px;background:#2a3550;border-radius:99px;overflow:hidden;margin-top:9px}.bar>div{height:100%;background:linear-gradient(90deg,var(--blue),var(--purple));width:0%;transition:width .2s}.nav{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:14px 0}.nav button{font-size:12px;padding:10px 4px}.nav button.active{background:#d9f3ff;color:#0b1730;border-color:#d9f3ff}.section-title{font-size:19px;margin:20px 0 10px}.card{background:#11182a;border:1px solid var(--line);border-radius:17px;padding:14px;margin:10px 0}.row{display:flex;align-items:center;justify-content:space-between;gap:10px}.row.start{align-items:flex-start}.muted{color:var(--muted)}.small{font-size:12px}.tag{display:inline-flex;border-radius:999px;padding:4px 8px;font-size:11px;font-weight:800;background:#22344e;color:var(--blue)}.tag.done{background:#153c35;color:var(--green)}.quest-title{font-weight:800;font-size:15px}.quest-desc{color:#b6c2dc;font-size:13px;margin:7px 0 12px}.check{display:flex;gap:10px;align-items:flex-start}.check input{accent-color:#6dd3ff;width:20px;height:20px;flex-shrink:0;margin-top:1px}.quest-actions{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px}.xp{color:var(--gold);font-weight:850;font-size:12px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.field{display:flex;flex-direction:column;gap:6px;margin:10px 0}.field label{font-size:12px;color:var(--muted)}input,select{width:100%;background:#0a1020;border:1px solid var(--line);color:var(--text);border-radius:11px;padding:12px}.ranklist{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.rankpick{padding:10px 4px;text-align:center}.rankpick.selected{border-color:var(--blue);box-shadow:0 0 0 1px var(--blue) inset}.hidden{display:none!important}.footer{margin-top:20px;color:#7584a3;font-size:11px;text-align:center}.toast{position:fixed;bottom:82px;left:50%;transform:translateX(-50%);background:#e5f7ff;color:#0b1730;padding:10px 15px;border-radius:12px;font-weight:800;box-shadow:0 8px 30px #0008;z-index:10}.danger{color:var(--red)}.bottom-note{font-size:11px;color:#8090b0;margin-top:12px}
+@media(min-width:600px){.wrap{padding-top:28px}.stats{grid-template-columns:repeat(3,1fr)}.ranklist{grid-template-columns:repeat(7,1fr)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div><div class="brand">HUNTER MANAGEMENT SYSTEM</div><div class="sub">PERSONAL STUDY PROTOCOL</div></div>
+    <div class="rankbox"><div class="sub">HUNTER RANK</div><div class="rank" id="rankDisplay">F</div></div>
+  </header>
+  <section class="hero">
+    <div class="brand">PLAYER PROFILE // 001</div>
+    <h1>SOLO SYSTEM</h1>
+    <p>Every quest is progress. Every mistake is data. Clear the dungeon.</p>
+    <div class="stats">
+      <div class="stat"><b id="levelDisplay">1</b><span>PLAYER LEVEL</span></div>
+      <div class="stat"><b><span id="xpDisplay">0</span><small> XP</small></b><span>TOTAL XP</span></div>
+      <div class="stat"><b id="countDisplay">0/7</b><span>TODAY'S QUESTS</span></div>
+    </div>
+    <div class="row" style="margin-top:14px"><span class="small muted">NEXT LEVEL</span><span class="small" id="levelProgressText">0 / 100 XP</span></div>
+    <div class="bar"><div id="xpBar"></div></div>
+    <div class="row" style="margin-top:14px"><span class="small muted">CLAT COUNTDOWN</span><b id="countdown">-- days</b></div>
+  </section>
+
+  <nav class="nav">
+    <button class="active" data-tab="home">⚔ Quests</button>
+    <button data-tab="dungeons">▣ Dungeons</button>
+    <button data-tab="stats">▤ Status</button>
+    <button data-tab="settings">⚙ Settings</button>
+  </nav>
+
+  <main>
+    <section id="tab-home">
+      <div class="row"><h2 class="section-title">Today's Quest Board</h2><span class="tag" id="dateTag"></span></div>
+      <p class="muted small">Tick a mission only after completing it. Your progress saves on this device.</p>
+      <div class="grid2">
+        <div class="card"><div class="muted small">CLAT missions</div><b id="clatCount">0 / 4</b></div>
+        <div class="card"><div class="muted small">Board missions</div><b id="boardCount">0 / 3</b></div>
+      </div>
+      <div id="questList"></div>
+      <div class="card">
+        <h3 style="margin-top:0">End-of-day report</h3>
+        <div class="row"><span class="muted">XP earned today</span><b id="todayXp">0 XP</b></div>
+        <div class="row" style="margin-top:8px"><span class="muted">Study time logged</span><b id="timeDone">0m</b></div>
+        <div class="row" style="margin-top:8px"><span class="muted">Quests remaining</span><b id="remaining">7</b></div>
+        <button class="primary" style="width:100%;margin-top:13px" id="submitReport">Submit daily report</button>
+      </div>
+    </section>
+
+    <section id="tab-dungeons" class="hidden">
+      <h2 class="section-title">Dungeon Gate</h2>
+      <p class="muted small">As a newbie, the System recommends E-rank. Higher gates unlock as your skills improve. You can preview any gate.</p>
+      <div class="ranklist" id="rankPicker"></div>
+      <div class="card" id="dungeonInfo"></div>
+      <button class="primary" id="generateDungeon" style="width:100%">Generate dungeon quest</button>
+      <div id="generatedDungeon"></div>
+    </section>
+
+    <section id="tab-stats" class="hidden">
+      <h2 class="section-title">Hunter Status</h2>
+      <div class="card">
+        <div class="row"><span class="muted">Current rank</span><b id="statusRank">F-RANK</b></div>
+        <div class="row" style="margin-top:10px"><span class="muted">Level</span><b id="statusLevel">1</b></div>
+        <div class="row" style="margin-top:10px"><span class="muted">Lifetime XP</span><b id="statusXp">0</b></div>
+        <div class="row" style="margin-top:10px"><span class="muted">Dungeons cleared</span><b id="dungeonsCleared">0</b></div>
+        <div class="row" style="margin-top:10px"><span class="muted">Daily reports</span><b id="reportsCount">0</b></div>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0">Mock battle record</h3>
+        <p class="muted small">Enter a real CLAT mock score. The app records it for your trend. It won't promote your rank from one score alone.</p>
+        <div class="field"><label>Score out of 120</label><input id="mockScore" type="number" min="0" max="120" placeholder="e.g. 52"></div>
+        <button class="primary" id="logMock" style="width:100%">Log mock score</button>
+        <div id="mockResult" class="small muted" style="margin-top:10px"></div>
+      </div>
+      <h3 class="section-title">Recent history</h3><div id="historyList"></div>
+    </section>
+
+    <section id="tab-settings" class="hidden">
+      <h2 class="section-title">System Settings</h2>
+      <div class="card">
+        <div class="field"><label>Player name / callsign</label><input id="playerName" maxlength="30" value="A.R.S"></div>
+        <div class="field"><label>CLAT exam date</label><input id="examDate" type="date" value="2026-12-06"></div>
+        <div class="field"><label>Daily study capacity (minutes, excluding school/coaching)</label><select id="capacity"><option value="180">3 hours</option><option value="240">4 hours</option><option value="360" selected>6 hours</option><option value="480">8 hours</option></select></div>
+        <button class="primary" id="saveSettings" style="width:100%">Save settings</button>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0">Backup / reset</h3>
+        <p class="muted small">Export your progress to a backup file. Import it later if you change devices.</p>
+        <div class="grid2"><button id="exportData">Export backup</button><button id="importButton">Import backup</button></div>
+        <input type="file" id="importFile" accept="application/json" class="hidden">
+        <button id="resetData" style="width:100%;margin-top:10px;border-color:#9b4358;color:#ff9aaa">Reset all progress</button>
+        <p class="bottom-note">Progress is saved locally in this browser. Export a backup before clearing browser data or switching devices.</p>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0">Install on phone</h3>
+        <p class="muted small">Open this app's hosted address in Chrome, then choose menu ⋮ → Add to Home screen / Install app. This ZIP is the app's source package; it must be hosted or opened in a compatible local server for full PWA installation.</p>
+      </div>
+    </section>
+  </main>
+  <div class="footer">SOLO SYSTEM • YOUR PROGRESS, YOUR RESPONSIBILITY</div>
+</div>
+<div id="toast" class="toast hidden"></div>
+<script>
+const QUESTS=[
+{id:1,cat:"CLAT",name:"Mock Autopsy",mins:60,xp:20,desc:"Review your latest mock. Categorize wrong and guessed answers: concept gap, misreading, time pressure, or weak elimination."},
+{id:2,cat:"CLAT",name:"Current Affairs Intelligence",mins:45,xp:15,desc:"Revise one important topic from your notes. Write 10 recall questions and answer them without looking."},
+{id:3,cat:"CLAT",name:"Newspaper Recon",mins:45,xp:15,desc:"Read national, international, legal and constitutional news. Note the issue, key facts, institutions and significance."},
+{id:4,cat:"CLAT",name:"Accuracy Trial",mins:30,xp:10,desc:"Attempt 12–15 timed questions from your weakest section. Check every answer and explain your mistakes."},
+{id:5,cat:"BOARDS",name:"Economics Dungeon",mins:75,xp:15,desc:"Study one unfinished Economics topic. Practise relevant numericals if applicable and finish with closed-book recall."},
+{id:6,cat:"BOARDS",name:"History Archive",mins:60,xp:15,desc:"Study one unfinished History chapter. Create a timeline or concept map and write two exam-style answers."},
+{id:7,cat:"BOARDS",name:"Legal Studies Arena",mins:45,xp:10,desc:"Revise one unfinished Legal Studies topic, learn key terms and write one structured board-style answer."}
+];
+const DUNGEONS={
+E:{title:"Beginner Gate",desc:"Foundations, easy recall and short practice. Recommended for your first clear.",mission:"Complete 10 foundational questions and explain 3 answers in your own words.",xp:25},
+D:{title:"Novice Gate",desc:"Standard practice with familiar concepts.",mission:"Complete 15 questions and review every error.",xp:35},
+C:{title:"Intermediate Gate",desc:"Mixed questions that test understanding.",mission:"Complete a 20-question timed set and score at least 70%.",xp:45},
+B:{title:"Advanced Gate",desc:"Harder passages and structured board answers.",mission:"Complete a timed sectional and write two high-quality board answers.",xp:60},
+A:{title:"Expert Gate",desc:"Difficult questions with close distractors.",mission:"Complete a difficult timed set, then produce a full error log.",xp:75},
+S:{title:"Elite Gate",desc:"High-pressure performance challenge.",mission:"Complete a full mock under exam conditions and analyse it thoroughly.",xp:100},
+SS:{title:"Monarch Gate",desc:"Mastery challenge. Available as a preview; attempt only when ready.",mission:"Complete a full mock plus a targeted weakness set and show consistent accuracy across recent attempts.",xp:150}
+};
+const KEY="soloSystemSaveV1";
+const today=()=>new Date().toISOString().slice(0,10);
+let state={name:"A.R.S",examDate:"2026-12-06",capacity:360,rank:"F",totalXP:0,done:{},day:today(),todayXP:0,history:[],mockScores:[],dungeonsCleared:0,selectedDungeon:"E",generated:null};
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY)||"null");if(s)state={...state,...s}}catch(e){} if(state.day!==today()){state.day=today();state.done={};state.todayXP=0;state.generated=null} }
+function save(){localStorage.setItem(KEY,JSON.stringify(state));render()}
+function toast(s){const t=document.getElementById("toast");t.textContent=s;t.classList.remove("hidden");setTimeout(()=>t.classList.add("hidden"),2200)}
+function level(){return Math.floor(state.totalXP/100)+1}
+function currentLevelXP(){return state.totalXP%100}
+function doneIds(){return Object.keys(state.done).filter(k=>state.done[k]).map(Number)}
+function rankIndex(r){return ["F","E","D","C","B","A","S","SS"].indexOf(r)}
+function setTab(tab){document.querySelectorAll("main section").forEach(s=>s.classList.add("hidden"));document.getElementById("tab-"+tab).classList.remove("hidden");document.querySelectorAll(".nav button").forEach(b=>b.classList.toggle("active",b.dataset.tab===tab))}
+function renderQuests(){
+ const list=document.getElementById("questList");list.innerHTML="";
+ for(const cat of ["CLAT","BOARDS"]){
+  const h=document.createElement("h3");h.className="section-title";h.textContent=cat==="CLAT"?"⚔ CLAT MISSIONS":"▣ BOARD MISSIONS";list.appendChild(h);
+  QUESTS.filter(q=>q.cat===cat).forEach(q=>{
+   const cleared=!!state.done[q.id],card=document.createElement("div");card.className="card";
+   card.innerHTML=`<div class="row start"><label class="check" style="flex:1"><input type="checkbox" ${cleared?"checked":""} aria-label="Complete ${q.name}"><span><span class="quest-title">${q.name}</span><div class="quest-desc">${q.desc}</div></span></label><span class="tag ${cleared?"done":""}">${cleared?"CLEARED":"+"+q.xp+" XP"}</span></div><div class="quest-actions"><span class="small muted">◷ ${q.mins} minutes</span><span class="xp">${cleared?"XP CLAIMED":"REWARD: "+q.xp+" XP"}</span></div>`;
+   const input=card.querySelector("input");input.addEventListener("change",()=>{if(input.checked&&!state.done[q.id]){state.done[q.id]=true;state.totalXP+=q.xp;state.todayXP+=q.xp;toast("QUEST CLEARED  +"+q.xp+" XP")}else if(!input.checked&&state.done[q.id]){state.done[q.id]=false;state.totalXP=Math.max(0,state.totalXP-q.xp);state.todayXP=Math.max(0,state.todayXP-q.xp);toast("Quest completion undone")}save()});
+   list.appendChild(card);
+  });
+ }
+}
+function renderDungeons(){
+ const picker=document.getElementById("rankPicker");picker.innerHTML="";
+ Object.keys(DUNGEONS).forEach(r=>{const b=document.createElement("button");b.className="rankpick"+(state.selectedDungeon===r?" selected":"");b.textContent=r;b.addEventListener("click",()=>{state.selectedDungeon=r;save()});picker.appendChild(b)});
+ const d=DUNGEONS[state.selectedDungeon];document.getElementById("dungeonInfo").innerHTML=`<div class="row"><h3 style="margin:0">${state.selectedDungeon}-RANK GATE</h3><span class="tag">+${d.xp} XP</span></div><p style="margin-bottom:5px">${d.title}</p><p class="muted small">${d.desc}</p><b>Clear condition</b><p class="small">${d.mission}</p>`;
+ const gen=document.getElementById("generatedDungeon");gen.innerHTML=state.generated?`<div class="card"><span class="tag">ACTIVE DUNGEON</span><h3>${state.generated.rank}-Rank: ${state.generated.title}</h3><p>${state.generated.mission}</p><div class="row"><span class="xp">Reward: ${state.generated.xp} XP</span><button class="primary" id="clearDungeon" ${state.generated.cleared?"disabled":""}>${state.generated.cleared?"CLEARED":"Clear dungeon"}</button></div></div>`:"";
+ const c=document.getElementById("clearDungeon");if(c)c.addEventListener("click",()=>{state.generated.cleared=true;state.totalXP+=state.generated.xp;state.todayXP+=state.generated.xp;state.dungeonsCleared++;toast("DUNGEON CLEARED  +"+state.generated.xp+" XP");save()});
+}
+function render(){
+ const ids=doneIds(),clat=ids.filter(id=>QUESTS.find(q=>q.id===id)?.cat==="CLAT").length,boards=ids.filter(id=>QUESTS.find(q=>q.id===id)?.cat==="BOARDS").length;
+ document.getElementById("rankDisplay").textContent=state.rank;document.getElementById("levelDisplay").textContent=level();document.getElementById("xpDisplay").textContent=state.totalXP;document.getElementById("countDisplay").textContent=ids.length+"/7";document.getElementById("levelProgressText").textContent=currentLevelXP()+" / 100 XP";document.getElementById("xpBar").style.width=currentLevelXP()+"%";
+ const days=Math.ceil((new Date(state.examDate+"T00:00:00")-new Date(new Date().toDateString()))/86400000);document.getElementById("countdown").textContent=Math.max(0,days)+" days";
+ document.getElementById("dateTag").textContent=new Date().toLocaleDateString(undefined,{day:"numeric",month:"short"});document.getElementById("clatCount").textContent=clat+" / 4";document.getElementById("boardCount").textContent=boards+" / 3";document.getElementById("todayXp").textContent=state.todayXP+" XP";
+ const minutes=ids.reduce((n,id)=>n+(QUESTS.find(q=>q.id===id)?.mins||0),0);document.getElementById("timeDone").textContent=minutes>=60?Math.floor(minutes/60)+"h "+minutes%60+"m":minutes+"m";document.getElementById("remaining").textContent=7-ids.length;
+ document.getElementById("statusRank").textContent=state.rank+"-RANK";document.getElementById("statusLevel").textContent=level();document.getElementById("statusXp").textContent=state.totalXP;document.getElementById("dungeonsCleared").textContent=state.dungeonsCleared;document.getElementById("reportsCount").textContent=state.history.length;
+ document.getElementById("playerName").value=state.name;document.getElementById("examDate").value=state.examDate;document.getElementById("capacity").value=String(state.capacity);
+ renderQuests();renderDungeons();renderHistory();
+}
+function renderHistory(){const el=document.getElementById("historyList");if(!state.history.length){el.innerHTML='<div class="card muted small">No reports submitted yet.</div>';return}el.innerHTML=state.history.slice().reverse().slice(0,12).map(h=>`<div class="card"><div class="row"><b>${h.date}</b><span class="tag">${h.done}/7 quests</span></div><p class="muted small">${h.xp} XP earned · ${h.score==null?"No mock score": "Mock: "+h.score+"/120"}</p></div>`).join("")}
+document.querySelectorAll(".nav button").forEach(b=>b.addEventListener("click",()=>setTab(b.dataset.tab)));
+document.getElementById("submitReport").addEventListener("click",()=>{state.history.push({date:today(),done:doneIds().length,xp:state.todayXP,score:state.mockScores.length?state.mockScores[state.mockScores.length-1].score:null});save();toast("DAILY REPORT SAVED")});
+document.getElementById("generateDungeon").addEventListener("click",()=>{const r=state.selectedDungeon,d=DUNGEONS[r];state.generated={rank:r,...d,cleared:false};save();toast(r+"-RANK GATE GENERATED")});
+document.getElementById("logMock").addEventListener("click",()=>{const v=Number(document.getElementById("mockScore").value);if(!Number.isFinite(v)||v<0||v>120||document.getElementById("mockScore").value===""){toast("Enter a score from 0 to 120");return}state.mockScores.push({date:today(),score:v});document.getElementById("mockResult").textContent="Recorded: "+v+"/120 ("+(v/120*100).toFixed(1)+"%). Review your errors before the next mock.";save();toast("MOCK RESULT LOGGED")});
+document.getElementById("saveSettings").addEventListener("click",()=>{state.name=document.getElementById("playerName").value.trim()||"Hunter";state.examDate=document.getElementById("examDate").value||"2026-12-06";state.capacity=Number(document.getElementById("capacity").value);save();toast("SETTINGS SAVED")});
+document.getElementById("exportData").addEventListener("click",()=>{const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="solo-system-backup.json";a.click();URL.revokeObjectURL(a.href)});
+document.getElementById("importButton").addEventListener("click",()=>document.getElementById("importFile").click());
+document.getElementById("importFile").addEventListener("change",async e=>{try{const f=e.target.files[0];if(!f)return;const imported=JSON.parse(await f.text());if(!imported||!Array.isArray(imported.history)||typeof imported.totalXP!=="number")throw Error("Invalid backup");state={...state,...imported};save();toast("BACKUP IMPORTED")}catch(err){toast("Could not import that backup")}e.target.value=""});
+document.getElementById("resetData").addEventListener("click",()=>{if(confirm("Reset all Solo System progress? Export a backup first if you want to keep it.")){localStorage.removeItem(KEY);state={name:"A.R.S",examDate:"2026-12-06",capacity:360,rank:"F",totalXP:0,done:{},day:today(),todayXP:0,history:[],mockScores:[],dungeonsCleared:0,selectedDungeon:"E",generated:null};save();toast("SYSTEM RESET")}});
+
+load();render();
+if("serviceWorker" in navigator && location.protocol.startsWith("http")) navigator.serviceWorker.register("./sw.js").catch(()=>{});
+</script>
+</body>
+</html>
