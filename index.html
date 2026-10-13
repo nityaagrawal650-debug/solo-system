@@ -50,6 +50,8 @@ button,input,select{font:inherit}button{cursor:pointer;border:1px solid var(--li
         <div class="card"><div class="muted small">CLAT missions</div><b id="clatCount">0 / 4</b></div>
         <div class="card"><div class="muted small">Board missions</div><b id="boardCount">0 / 3</b></div>
       </div>
+      <button class="primary" id="generateToday" style="width:100%;margin:4px 0 12px">Generate Today's Quests</button>
+      <p class="muted small" id="questStatus">Generate your quests for today. Your lifetime XP and past reports stay saved.</p>
       <div id="questList"></div>
       <div class="card">
         <h3 style="margin-top:0">End-of-day report</h3>
@@ -114,15 +116,23 @@ button,input,select{font:inherit}button{cursor:pointer;border:1px solid var(--li
 </div>
 <div id="toast" class="toast hidden"></div>
 <script>
-const QUESTS=[
+const QUEST_POOL=[
 {id:1,cat:"CLAT",name:"Mock Autopsy",mins:60,xp:20,desc:"Review your latest mock. Categorize wrong and guessed answers: concept gap, misreading, time pressure, or weak elimination."},
 {id:2,cat:"CLAT",name:"Current Affairs Intelligence",mins:45,xp:15,desc:"Revise one important topic from your notes. Write 10 recall questions and answer them without looking."},
 {id:3,cat:"CLAT",name:"Newspaper Recon",mins:45,xp:15,desc:"Read national, international, legal and constitutional news. Note the issue, key facts, institutions and significance."},
 {id:4,cat:"CLAT",name:"Accuracy Trial",mins:30,xp:10,desc:"Attempt 12–15 timed questions from your weakest section. Check every answer and explain your mistakes."},
-{id:5,cat:"BOARDS",name:"Economics Dungeon",mins:75,xp:15,desc:"Study one unfinished Economics topic. Practise relevant numericals if applicable and finish with closed-book recall."},
-{id:6,cat:"BOARDS",name:"History Archive",mins:60,xp:15,desc:"Study one unfinished History chapter. Create a timeline or concept map and write two exam-style answers."},
-{id:7,cat:"BOARDS",name:"Legal Studies Arena",mins:45,xp:10,desc:"Revise one unfinished Legal Studies topic, learn key terms and write one structured board-style answer."}
+{id:5,cat:"CLAT",name:"Legal Reasoning Drill",mins:40,xp:15,desc:"Solve a legal reasoning passage. Identify the principle, relevant facts, and why each option is right or wrong."},
+{id:6,cat:"CLAT",name:"Logical Reasoning Lab",mins:35,xp:15,desc:"Solve a timed critical-reasoning set. Review assumptions, strengthen/weaken questions, and your errors."},
+{id:7,cat:"CLAT",name:"English Passage Run",mins:35,xp:10,desc:"Attempt one timed English passage. Review the evidence for each answer and note unfamiliar vocabulary."},
+{id:8,cat:"BOARDS",name:"Economics Dungeon",mins:75,xp:15,desc:"Study one unfinished Economics topic. Practise relevant numericals if applicable and finish with closed-book recall."},
+{id:9,cat:"BOARDS",name:"History Archive",mins:60,xp:15,desc:"Study one unfinished History chapter. Create a timeline or concept map and write two exam-style answers."},
+{id:10,cat:"BOARDS",name:"Legal Studies Arena",mins:45,xp:10,desc:"Revise one unfinished Legal Studies topic, learn key terms and write one structured board-style answer."},
+{id:11,cat:"BOARDS",name:"Psychology Lab",mins:50,xp:15,desc:"Revise one Psychology topic. Make a key-term sheet and answer two board-style questions without looking."},
+{id:12,cat:"BOARDS",name:"English Workshop",mins:40,xp:10,desc:"Practise one writing task or literature answer. Check structure, evidence, grammar and word limit."},
+{id:13,cat:"BOARDS",name:"Closed-Book Recall",mins:30,xp:10,desc:"Choose a recently studied chapter. Write everything you remember, then check the textbook and fill gaps."},
+{id:14,cat:"BOARDS",name:"Answer-Writing Forge",mins:40,xp:10,desc:"Write two board-style answers. Improve headings, keywords, examples and point-wise structure."}
 ];
+let QUESTS=[];
 const DUNGEONS={
 E:{title:"Beginner Gate",desc:"Foundations, easy recall and short practice. Recommended for your first clear.",mission:"Complete 10 foundational questions and explain 3 answers in your own words.",xp:25},
 D:{title:"Novice Gate",desc:"Standard practice with familiar concepts.",mission:"Complete 15 questions and review every error.",xp:35},
@@ -133,9 +143,10 @@ S:{title:"Elite Gate",desc:"High-pressure performance challenge.",mission:"Compl
 SS:{title:"Monarch Gate",desc:"Mastery challenge. Available as a preview; attempt only when ready.",mission:"Complete a full mock plus a targeted weakness set and show consistent accuracy across recent attempts.",xp:150}
 };
 const KEY="soloSystemSaveV1";
-const today=()=>new Date().toISOString().slice(0,10);
-let state={name:"A.R.S",examDate:"2026-12-06",capacity:360,rank:"F",totalXP:0,done:{},day:today(),todayXP:0,history:[],mockScores:[],dungeonsCleared:0,selectedDungeon:"E",generated:null};
-function load(){try{const s=JSON.parse(localStorage.getItem(KEY)||"null");if(s)state={...state,...s}}catch(e){} if(state.day!==today()){state.day=today();state.done={};state.todayXP=0;state.generated=null} }
+const today=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
+let state={name:"A.R.S",examDate:"2026-12-06",capacity:360,rank:"F",totalXP:0,done:{},day:today(),todayXP:0,history:[],mockScores:[],dungeonsCleared:0,selectedDungeon:"E",generated:null,activeQuestIds:[]};
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY)||"null");if(s)state={...state,...s};if(!Array.isArray(state.activeQuestIds)){state.activeQuestIds=[];state.done={}}}catch(e){} if(state.day!==today()){state.day=today();state.done={};state.todayXP=0;state.generated=null;state.activeQuestIds=[]} QUESTS=QUEST_POOL.filter(q=>(state.activeQuestIds||[]).includes(q.id));}
+function generateTodaysQuests(){if((state.activeQuestIds||[]).length){toast("Today's quests are already active. Progress preserved!");return}const seed=Number(today().replaceAll("-",""));function shuffle(arr,offset){const a=arr.slice();let x=(seed+offset)>>>0;for(let i=a.length-1;i>0;i--){x=(x*1664525+1013904223)>>>0;const j=x%(i+1);[a[i],a[j]]=[a[j],a[i]]}return a}const clat=shuffle(QUEST_POOL.filter(q=>q.cat==="CLAT"),11).slice(0,4);const boards=shuffle(QUEST_POOL.filter(q=>q.cat==="BOARDS"),29).slice(0,3);QUESTS=[...clat,...boards];state.activeQuestIds=QUESTS.map(q=>q.id);state.done={};state.todayXP=0;save();toast("Today's quests generated!")}
 function save(){localStorage.setItem(KEY,JSON.stringify(state));render()}
 function toast(s){const t=document.getElementById("toast");t.textContent=s;t.classList.remove("hidden");setTimeout(()=>t.classList.add("hidden"),2200)}
 function level(){return Math.floor(state.totalXP/100)+1}
@@ -163,10 +174,11 @@ function renderDungeons(){
  const c=document.getElementById("clearDungeon");if(c)c.addEventListener("click",()=>{state.generated.cleared=true;state.totalXP+=state.generated.xp;state.todayXP+=state.generated.xp;state.dungeonsCleared++;toast("DUNGEON CLEARED  +"+state.generated.xp+" XP");save()});
 }
 function render(){
+ QUESTS=QUEST_POOL.filter(q=>(state.activeQuestIds||[]).includes(q.id));
  const ids=doneIds(),clat=ids.filter(id=>QUESTS.find(q=>q.id===id)?.cat==="CLAT").length,boards=ids.filter(id=>QUESTS.find(q=>q.id===id)?.cat==="BOARDS").length;
  document.getElementById("rankDisplay").textContent=state.rank;document.getElementById("levelDisplay").textContent=level();document.getElementById("xpDisplay").textContent=state.totalXP;document.getElementById("countDisplay").textContent=ids.length+"/7";document.getElementById("levelProgressText").textContent=currentLevelXP()+" / 100 XP";document.getElementById("xpBar").style.width=currentLevelXP()+"%";
  const days=Math.ceil((new Date(state.examDate+"T00:00:00")-new Date(new Date().toDateString()))/86400000);document.getElementById("countdown").textContent=Math.max(0,days)+" days";
- document.getElementById("dateTag").textContent=new Date().toLocaleDateString(undefined,{day:"numeric",month:"short"});document.getElementById("clatCount").textContent=clat+" / 4";document.getElementById("boardCount").textContent=boards+" / 3";document.getElementById("todayXp").textContent=state.todayXP+" XP";
+ document.getElementById("dateTag").textContent=new Date().toLocaleDateString(undefined,{day:"numeric",month:"short"});document.getElementById("generateToday").disabled=(state.activeQuestIds||[]).length>0;document.getElementById("generateToday").textContent=(state.activeQuestIds||[]).length?"Today's Quests Generated":"Generate Today's Quests";document.getElementById("questStatus").textContent=(state.activeQuestIds||[]).length?"Today's quests are saved on this device. Lifetime XP and previous reports are preserved.":"Tap to generate 4 CLAT quests and 3 CBSE quests for today.";document.getElementById("clatCount").textContent=clat+" / 4";document.getElementById("boardCount").textContent=boards+" / 3";document.getElementById("todayXp").textContent=state.todayXP+" XP";
  const minutes=ids.reduce((n,id)=>n+(QUESTS.find(q=>q.id===id)?.mins||0),0);document.getElementById("timeDone").textContent=minutes>=60?Math.floor(minutes/60)+"h "+minutes%60+"m":minutes+"m";document.getElementById("remaining").textContent=7-ids.length;
  document.getElementById("statusRank").textContent=state.rank+"-RANK";document.getElementById("statusLevel").textContent=level();document.getElementById("statusXp").textContent=state.totalXP;document.getElementById("dungeonsCleared").textContent=state.dungeonsCleared;document.getElementById("reportsCount").textContent=state.history.length;
  document.getElementById("playerName").value=state.name;document.getElementById("examDate").value=state.examDate;document.getElementById("capacity").value=String(state.capacity);
@@ -174,6 +186,7 @@ function render(){
 }
 function renderHistory(){const el=document.getElementById("historyList");if(!state.history.length){el.innerHTML='<div class="card muted small">No reports submitted yet.</div>';return}el.innerHTML=state.history.slice().reverse().slice(0,12).map(h=>`<div class="card"><div class="row"><b>${h.date}</b><span class="tag">${h.done}/7 quests</span></div><p class="muted small">${h.xp} XP earned · ${h.score==null?"No mock score": "Mock: "+h.score+"/120"}</p></div>`).join("")}
 document.querySelectorAll(".nav button").forEach(b=>b.addEventListener("click",()=>setTab(b.dataset.tab)));
+document.getElementById("generateToday").addEventListener("click",generateTodaysQuests);
 document.getElementById("submitReport").addEventListener("click",()=>{state.history.push({date:today(),done:doneIds().length,xp:state.todayXP,score:state.mockScores.length?state.mockScores[state.mockScores.length-1].score:null});save();toast("DAILY REPORT SAVED")});
 document.getElementById("generateDungeon").addEventListener("click",()=>{const r=state.selectedDungeon,d=DUNGEONS[r];state.generated={rank:r,...d,cleared:false};save();toast(r+"-RANK GATE GENERATED")});
 document.getElementById("logMock").addEventListener("click",()=>{const v=Number(document.getElementById("mockScore").value);if(!Number.isFinite(v)||v<0||v>120||document.getElementById("mockScore").value===""){toast("Enter a score from 0 to 120");return}state.mockScores.push({date:today(),score:v});document.getElementById("mockResult").textContent="Recorded: "+v+"/120 ("+(v/120*100).toFixed(1)+"%). Review your errors before the next mock.";save();toast("MOCK RESULT LOGGED")});
@@ -181,7 +194,7 @@ document.getElementById("saveSettings").addEventListener("click",()=>{state.name
 document.getElementById("exportData").addEventListener("click",()=>{const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="solo-system-backup.json";a.click();URL.revokeObjectURL(a.href)});
 document.getElementById("importButton").addEventListener("click",()=>document.getElementById("importFile").click());
 document.getElementById("importFile").addEventListener("change",async e=>{try{const f=e.target.files[0];if(!f)return;const imported=JSON.parse(await f.text());if(!imported||!Array.isArray(imported.history)||typeof imported.totalXP!=="number")throw Error("Invalid backup");state={...state,...imported};save();toast("BACKUP IMPORTED")}catch(err){toast("Could not import that backup")}e.target.value=""});
-document.getElementById("resetData").addEventListener("click",()=>{if(confirm("Reset all Solo System progress? Export a backup first if you want to keep it.")){localStorage.removeItem(KEY);state={name:"A.R.S",examDate:"2026-12-06",capacity:360,rank:"F",totalXP:0,done:{},day:today(),todayXP:0,history:[],mockScores:[],dungeonsCleared:0,selectedDungeon:"E",generated:null};save();toast("SYSTEM RESET")}});
+document.getElementById("resetData").addEventListener("click",()=>{if(confirm("Reset all Solo System progress? Export a backup first if you want to keep it.")){localStorage.removeItem(KEY);state={name:"A.R.S",examDate:"2026-12-06",capacity:360,rank:"F",totalXP:0,done:{},day:today(),todayXP:0,history:[],mockScores:[],dungeonsCleared:0,selectedDungeon:"E",generated:null,activeQuestIds:[]};QUESTS=[];save();toast("SYSTEM RESET")}});
 
 load();render();
 if("serviceWorker" in navigator && location.protocol.startsWith("http")) navigator.serviceWorker.register("./sw.js").catch(()=>{});
