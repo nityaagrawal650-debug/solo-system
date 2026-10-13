@@ -87,7 +87,7 @@ button,input,select{font:inherit}button{cursor:pointer;border:1px solid var(--li
         <button class="primary" id="logMock" style="width:100%">Log mock score</button>
         <div id="mockResult" class="small muted" style="margin-top:10px"></div>
       </div>
-      <h3 class="section-title">Recent history</h3><div id="historyList"></div>
+      <h3 class="section-title">Your Analytical Report</h3><p class="muted small">Insights are calculated from the quests you complete and mock scores you log on this device. More entries = more reliable trends.</p><div id="analyticsReport"></div><h3 class="section-title">Recent history</h3><div id="historyList"></div>
     </section>
 
     <section id="tab-settings" class="hidden">
@@ -146,7 +146,7 @@ const KEY="soloSystemSaveV1";
 const today=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
 let state={name:"A.R.S",examDate:"2026-12-06",capacity:360,rank:"F",totalXP:0,done:{},day:today(),todayXP:0,history:[],mockScores:[],dungeonsCleared:0,selectedDungeon:"E",generated:null,activeQuestIds:[]};
 function load(){try{const s=JSON.parse(localStorage.getItem(KEY)||"null");if(s)state={...state,...s};if(!Array.isArray(state.activeQuestIds)){state.activeQuestIds=[];state.done={}}}catch(e){} if(state.day!==today()){state.day=today();state.done={};state.todayXP=0;state.generated=null;state.activeQuestIds=[]} QUESTS=QUEST_POOL.filter(q=>(state.activeQuestIds||[]).includes(q.id));}
-function generateTodaysQuests(){if((state.activeQuestIds||[]).length){toast("Today's quests are already active. Progress preserved!");return}const seed=Number(today().replaceAll("-",""));function shuffle(arr,offset){const a=arr.slice();let x=(seed+offset)>>>0;for(let i=a.length-1;i>0;i--){x=(x*1664525+1013904223)>>>0;const j=x%(i+1);[a[i],a[j]]=[a[j],a[i]]}return a}const clat=shuffle(QUEST_POOL.filter(q=>q.cat==="CLAT"),11).slice(0,4);const boards=shuffle(QUEST_POOL.filter(q=>q.cat==="BOARDS"),29).slice(0,3);QUESTS=[...clat,...boards];state.activeQuestIds=QUESTS.map(q=>q.id);state.done={};state.todayXP=0;save();toast("Today's quests generated!")}
+function generateTodaysQuests(){if((state.activeQuestIds||[]).length){toast("Today's quests are already active. Progress preserved!");return}const seed=Number(today().replaceAll("-","")) + (state.history.length*7919) + (state.mockScores.length*101);function shuffle(arr,offset){const a=arr.slice();let x=(seed+offset)>>>0;for(let i=a.length-1;i>0;i--){x=(x*1664525+1013904223)>>>0;const j=x%(i+1);[a[i],a[j]]=[a[j],a[i]]}return a}const clat=shuffle(QUEST_POOL.filter(q=>q.cat==="CLAT"),11).slice(0,4);const boards=shuffle(QUEST_POOL.filter(q=>q.cat==="BOARDS"),29).slice(0,3);QUESTS=[...clat,...boards];state.activeQuestIds=QUESTS.map(q=>q.id);state.done={};state.todayXP=0;save();toast("Today's quests generated!")}
 function save(){localStorage.setItem(KEY,JSON.stringify(state));render()}
 function toast(s){const t=document.getElementById("toast");t.textContent=s;t.classList.remove("hidden");setTimeout(()=>t.classList.add("hidden"),2200)}
 function level(){return Math.floor(state.totalXP/100)+1}
@@ -184,10 +184,24 @@ function render(){
  document.getElementById("playerName").value=state.name;document.getElementById("examDate").value=state.examDate;document.getElementById("capacity").value=String(state.capacity);
  renderQuests();renderDungeons();renderHistory();
 }
-function renderHistory(){const el=document.getElementById("historyList");if(!state.history.length){el.innerHTML='<div class="card muted small">No reports submitted yet.</div>';return}el.innerHTML=state.history.slice().reverse().slice(0,12).map(h=>`<div class="card"><div class="row"><b>${h.date}</b><span class="tag">${h.done}/7 quests</span></div><p class="muted small">${h.xp} XP earned · ${h.score==null?"No mock score": "Mock: "+h.score+"/120"}</p></div>`).join("")}
+function renderAnalytics(){
+ const el=document.getElementById("analyticsReport");if(!el)return;
+ const reports=state.history||[], mocks=state.mockScores||[], totalDone=reports.reduce((n,r)=>n+(r.done||0),0), totalPossible=reports.length*7;
+ const completion=totalPossible?Math.round(totalDone/totalPossible*100):0;
+ const recent=mocks.slice(-5), avg=recent.length?recent.reduce((n,m)=>n+m.score,0)/recent.length:null;
+ const prev=mocks.length>5?mocks.slice(-10,-5):[];const prevAvg=prev.length?prev.reduce((n,m)=>n+m.score,0)/prev.length:null;
+ const last=mocks.length?mocks[mocks.length-1].score:null;
+ const clatDone=reports.reduce((n,r)=>n+(r.clatDone||0),0), boardDone=reports.reduce((n,r)=>n+(r.boardDone||0),0);
+ let trend="Log at least 2 mocks to reveal a score trend.";if(avg!==null&&prevAvg!==null){const diff=avg-prevAvg;trend=diff>1?`Improving: recent mock average is up ${diff.toFixed(1)} marks.`:diff< -1?`Needs attention: recent mock average is down ${Math.abs(diff).toFixed(1)} marks.`:"Stable: recent mock average is broadly unchanged."}
+ let advice="Start submitting daily reports and log real mock scores for personalised analysis.";
+ if(reports.length){advice=completion>=80?"Strong quest consistency. Keep the routine and raise question quality gradually.":completion>=50?"Moderate consistency. Pick the 2 highest-priority quests first, then finish the remaining tasks.":"Consistency is the main bottleneck. Reduce friction: complete one CLAT task and one board task before anything else."}
+ if(mocks.length&&last!==null){if(last<50)advice+=" For CLAT, prioritise passage accuracy and a written error log before chasing speed.";else if(last<75)advice+=" For CLAT, analyse every wrong and guessed answer, then redo those questions after 48 hours.";else advice+=" For CLAT, protect accuracy and use timed mixed sets to improve consistency."}
+ el.innerHTML=`<div class="grid2"><div class="card"><div class="muted small">Daily quest completion</div><b style="font-size:24px">${reports.length?completion+"%":"—"}</b><div class="small muted">${totalDone} cleared / ${totalPossible} tracked</div></div><div class="card"><div class="muted small">Recent mock average</div><b style="font-size:24px">${avg===null?"—":avg.toFixed(1)+"/120"}</b><div class="small muted">${mocks.length} mock${mocks.length===1?"":"s"} logged</div></div><div class="card"><div class="muted small">Latest mock</div><b style="font-size:24px">${last===null?"—":last+"/120"}</b><div class="small muted">${last===null?"Log a score to track it":(last/120*100).toFixed(1)+"% raw score"}</div></div><div class="card"><div class="muted small">Quest XP earned</div><b style="font-size:24px">${reports.reduce((n,r)=>n+(r.xp||0),0)} XP</b><div class="small muted">Across submitted reports</div></div></div><div class="card"><b>Performance trend</b><p class="muted small">${trend}</p><b>Next-step recommendation</b><p class="muted small">${advice}</p><p class="muted small">CLAT quests cleared: ${clatDone} · Board quests cleared: ${boardDone}</p></div>`;
+}
+function renderHistory(){const el=document.getElementById("historyList");if(!state.history.length){el.innerHTML='<div class="card muted small">No reports submitted yet.</div>';renderAnalytics();return}el.innerHTML=state.history.slice().reverse().slice(0,12).map(h=>`<div class="card"><div class="row"><b>${h.date}</b><span class="tag">${h.done}/7 quests</span></div><p class="muted small">${h.xp} XP earned · ${h.score==null?"No mock score": "Mock: "+h.score+"/120"}</p></div>`).join("");renderAnalytics()}
 document.querySelectorAll(".nav button").forEach(b=>b.addEventListener("click",()=>setTab(b.dataset.tab)));
 document.getElementById("generateToday").addEventListener("click",generateTodaysQuests);
-document.getElementById("submitReport").addEventListener("click",()=>{state.history.push({date:today(),done:doneIds().length,xp:state.todayXP,score:state.mockScores.length?state.mockScores[state.mockScores.length-1].score:null});save();toast("DAILY REPORT SAVED")});
+document.getElementById("submitReport").addEventListener("click",()=>{const ids=doneIds(), qs=QUESTS;const report={date:today(),done:ids.filter(id=>qs.some(q=>q.id===id)).length,xp:state.todayXP,score:state.mockScores.length?state.mockScores[state.mockScores.length-1].score:null,clatDone:ids.filter(id=>qs.some(q=>q.id===id&&q.cat==="CLAT")).length,boardDone:ids.filter(id=>qs.some(q=>q.id===id&&q.cat==="BOARDS")).length,completedNames:qs.filter(q=>state.done[q.id]).map(q=>q.name)};const old=state.history.findIndex(h=>h.date===today());if(old>=0)state.history[old]=report;else state.history.push(report);save();toast("ANALYTICAL DAILY REPORT SAVED")});
 document.getElementById("generateDungeon").addEventListener("click",()=>{const r=state.selectedDungeon,d=DUNGEONS[r];state.generated={rank:r,...d,cleared:false};save();toast(r+"-RANK GATE GENERATED")});
 document.getElementById("logMock").addEventListener("click",()=>{const v=Number(document.getElementById("mockScore").value);if(!Number.isFinite(v)||v<0||v>120||document.getElementById("mockScore").value===""){toast("Enter a score from 0 to 120");return}state.mockScores.push({date:today(),score:v});document.getElementById("mockResult").textContent="Recorded: "+v+"/120 ("+(v/120*100).toFixed(1)+"%). Review your errors before the next mock.";save();toast("MOCK RESULT LOGGED")});
 document.getElementById("saveSettings").addEventListener("click",()=>{state.name=document.getElementById("playerName").value.trim()||"Hunter";state.examDate=document.getElementById("examDate").value||"2026-12-06";state.capacity=Number(document.getElementById("capacity").value);save();toast("SETTINGS SAVED")});
@@ -196,13 +210,7 @@ document.getElementById("importButton").addEventListener("click",()=>document.ge
 document.getElementById("importFile").addEventListener("change",async e=>{try{const f=e.target.files[0];if(!f)return;const imported=JSON.parse(await f.text());if(!imported||!Array.isArray(imported.history)||typeof imported.totalXP!=="number")throw Error("Invalid backup");state={...state,...imported};save();toast("BACKUP IMPORTED")}catch(err){toast("Could not import that backup")}e.target.value=""});
 document.getElementById("resetData").addEventListener("click",()=>{if(confirm("Reset all Solo System progress? Export a backup first if you want to keep it.")){localStorage.removeItem(KEY);state={name:"A.R.S",examDate:"2026-12-06",capacity:360,rank:"F",totalXP:0,done:{},day:today(),todayXP:0,history:[],mockScores:[],dungeonsCleared:0,selectedDungeon:"E",generated:null,activeQuestIds:[]};QUESTS=[];save();toast("SYSTEM RESET")}});
 
-load();
-// Automatically create today's date-seeded quest set on first visit or when a new day is detected.
-// Existing quests and completion progress remain intact for the current day.
-if(!(state.activeQuestIds||[]).length){
-  generateTodaysQuests();
-}
-render();
+load();render();
 if("serviceWorker" in navigator && location.protocol.startsWith("http")) navigator.serviceWorker.register("./sw.js").catch(()=>{});
 </script>
 </body>
