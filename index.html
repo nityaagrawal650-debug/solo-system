@@ -53,6 +53,11 @@ button,input,select{font:inherit}button{cursor:pointer;border:1px solid var(--li
       <button class="primary" id="generateToday" style="width:100%;margin:4px 0 12px">Generate Today's Quests</button>
       <p class="muted small" id="questStatus">Generate your quests for today. Your lifetime XP and past reports stay saved.</p>
       <div id="questList"></div>
+      <section id="tomorrowPreview" class="card hidden" aria-live="polite">
+        <div class="row"><h3 style="margin:0">Tomorrow's Quest Preview</h3><span class="tag">NEXT DAY</span></div>
+        <p class="muted small">Today's full board is cleared. Here are tomorrow's missions so you can prepare in advance. These quests will activate automatically when the date changes.</p>
+        <div id="tomorrowQuestList"></div>
+      </section>
       <div class="card">
         <h3 style="margin-top:0">End-of-day report</h3>
         <div class="row"><span class="muted">XP earned today</span><b id="todayXp">0 XP</b></div>
@@ -145,8 +150,15 @@ SS:{title:"Monarch Gate",desc:"Mastery challenge. Available as a preview; attemp
 const KEY="soloSystemSaveV1";
 const today=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
 let state={name:"A.R.S",examDate:"2026-12-06",capacity:360,rank:"F",totalXP:0,done:{},day:today(),todayXP:0,history:[],mockScores:[],dungeonsCleared:0,selectedDungeon:"E",generated:null,activeQuestIds:[]};
-function load(){try{const s=JSON.parse(localStorage.getItem(KEY)||"null");if(s)state={...state,...s};if(!Array.isArray(state.activeQuestIds)){state.activeQuestIds=[];state.done={}}}catch(e){} if(state.day!==today()){state.day=today();state.done={};state.todayXP=0;state.generated=null;state.activeQuestIds=[]} QUESTS=QUEST_POOL.filter(q=>(state.activeQuestIds||[]).includes(q.id));}
-function generateTodaysQuests(){if((state.activeQuestIds||[]).length){toast("Today's quests are already active. Progress preserved!");return}const seed=Number(today().replaceAll("-","")) + (state.history.length*7919) + (state.mockScores.length*101);function shuffle(arr,offset){const a=arr.slice();let x=(seed+offset)>>>0;for(let i=a.length-1;i>0;i--){x=(x*1664525+1013904223)>>>0;const j=x%(i+1);[a[i],a[j]]=[a[j],a[i]]}return a}const clat=shuffle(QUEST_POOL.filter(q=>q.cat==="CLAT"),11).slice(0,4);const boards=shuffle(QUEST_POOL.filter(q=>q.cat==="BOARDS"),29).slice(0,3);QUESTS=[...clat,...boards];state.activeQuestIds=QUESTS.map(q=>q.id);state.done={};state.todayXP=0;save();toast("Today's quests generated!")}
+function questIdsForDate(dateStr){
+ const seed=Number(dateStr.replaceAll("-",""));
+ function shuffle(arr,offset){const a=arr.slice();let x=(seed+offset)>>>0;for(let i=a.length-1;i>0;i--){x=(x*1664525+1013904223)>>>0;const j=x%(i+1);[a[i],a[j]]=[a[j],a[i]]}return a}
+ return [...shuffle(QUEST_POOL.filter(q=>q.cat==="CLAT"),11).slice(0,4),...shuffle(QUEST_POOL.filter(q=>q.cat==="BOARDS"),29).slice(0,3)].map(q=>q.id);
+}
+function tomorrowDate(){const d=new Date();d.setDate(d.getDate()+1);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY)||"null");if(s)state={...state,...s};if(!Array.isArray(state.activeQuestIds)){state.activeQuestIds=[];state.done={}}}catch(e){} if(!state.tomorrowPreview)state.tomorrowPreview=null; if(state.day!==today()){const preview=state.tomorrowPreview;state.day=today();state.done={};state.todayXP=0;state.generated=null;state.activeQuestIds=preview&&preview.date===today()?preview.ids:[];state.tomorrowPreview=null;localStorage.setItem(KEY,JSON.stringify(state));} QUESTS=QUEST_POOL.filter(q=>(state.activeQuestIds||[]).includes(q.id));}
+function generateTodaysQuests(){if((state.activeQuestIds||[]).length){toast("Today's quests are already active. Progress preserved!");return}QUESTS=QUEST_POOL.filter(q=>questIdsForDate(today()).includes(q.id));state.activeQuestIds=QUESTS.map(q=>q.id);state.done={};state.todayXP=0;save();toast("Today's quests generated!")}
+function ensureTomorrowPreview(){const active=state.activeQuestIds||[];if(active.length!==7)return;const completed=active.filter(id=>!!state.done[id]).length;if(completed!==7)return;const next=tomorrowDate();if(!state.tomorrowPreview||state.tomorrowPreview.date!==next){state.tomorrowPreview={date:next,ids:questIdsForDate(next)};localStorage.setItem(KEY,JSON.stringify(state));}}
 function save(){localStorage.setItem(KEY,JSON.stringify(state));render()}
 function toast(s){const t=document.getElementById("toast");t.textContent=s;t.classList.remove("hidden");setTimeout(()=>t.classList.add("hidden"),2200)}
 function level(){return Math.floor(state.totalXP/100)+1}
@@ -173,7 +185,16 @@ function renderDungeons(){
  const gen=document.getElementById("generatedDungeon");gen.innerHTML=state.generated?`<div class="card"><span class="tag">ACTIVE DUNGEON</span><h3>${state.generated.rank}-Rank: ${state.generated.title}</h3><p>${state.generated.mission}</p><div class="row"><span class="xp">Reward: ${state.generated.xp} XP</span><button class="primary" id="clearDungeon" ${state.generated.cleared?"disabled":""}>${state.generated.cleared?"CLEARED":"Clear dungeon"}</button></div></div>`:"";
  const c=document.getElementById("clearDungeon");if(c)c.addEventListener("click",()=>{state.generated.cleared=true;state.totalXP+=state.generated.xp;state.todayXP+=state.generated.xp;state.dungeonsCleared++;toast("DUNGEON CLEARED  +"+state.generated.xp+" XP");save()});
 }
+function renderTomorrowPreview(){
+ const section=document.getElementById("tomorrowPreview"),list=document.getElementById("tomorrowQuestList");
+ const active=state.activeQuestIds||[],allDone=active.length===7&&active.every(id=>!!state.done[id]);
+ if(!allDone||!state.tomorrowPreview||state.tomorrowPreview.date!==tomorrowDate()){section.classList.add("hidden");list.innerHTML="";return}
+ const next=QUEST_POOL.filter(q=>state.tomorrowPreview.ids.includes(q.id));
+ list.innerHTML=next.map(q=>`<div style="border-top:1px solid var(--line);padding:10px 0"><div class="row start"><b>${q.cat==="CLAT"?"⚔":"▣"} ${q.name}</b><span class="tag">${q.cat}</span></div><p class="quest-desc">${q.desc}</p><div class="row"><span class="small muted">◷ ${q.mins} minutes</span><span class="xp">+${q.xp} XP</span></div></div>`).join("");
+ section.classList.remove("hidden");
+}
 function render(){
+ ensureTomorrowPreview();
  QUESTS=QUEST_POOL.filter(q=>(state.activeQuestIds||[]).includes(q.id));
  const ids=doneIds(),clat=ids.filter(id=>QUESTS.find(q=>q.id===id)?.cat==="CLAT").length,boards=ids.filter(id=>QUESTS.find(q=>q.id===id)?.cat==="BOARDS").length;
  document.getElementById("rankDisplay").textContent=state.rank;document.getElementById("levelDisplay").textContent=level();document.getElementById("xpDisplay").textContent=state.totalXP;document.getElementById("countDisplay").textContent=ids.length+"/7";document.getElementById("levelProgressText").textContent=currentLevelXP()+" / 100 XP";document.getElementById("xpBar").style.width=currentLevelXP()+"%";
@@ -182,7 +203,7 @@ function render(){
  const minutes=ids.reduce((n,id)=>n+(QUESTS.find(q=>q.id===id)?.mins||0),0);document.getElementById("timeDone").textContent=minutes>=60?Math.floor(minutes/60)+"h "+minutes%60+"m":minutes+"m";document.getElementById("remaining").textContent=7-ids.length;
  document.getElementById("statusRank").textContent=state.rank+"-RANK";document.getElementById("statusLevel").textContent=level();document.getElementById("statusXp").textContent=state.totalXP;document.getElementById("dungeonsCleared").textContent=state.dungeonsCleared;document.getElementById("reportsCount").textContent=state.history.length;
  document.getElementById("playerName").value=state.name;document.getElementById("examDate").value=state.examDate;document.getElementById("capacity").value=String(state.capacity);
- renderQuests();renderDungeons();renderHistory();
+ renderQuests();renderTomorrowPreview();renderDungeons();renderHistory();
 }
 function renderAnalytics(){
  const el=document.getElementById("analyticsReport");if(!el)return;
