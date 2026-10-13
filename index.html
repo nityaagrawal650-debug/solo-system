@@ -196,7 +196,13 @@ document.getElementById("importButton").addEventListener("click",()=>document.ge
 document.getElementById("importFile").addEventListener("change",async e=>{try{const f=e.target.files[0];if(!f)return;const imported=JSON.parse(await f.text());if(!imported||!Array.isArray(imported.history)||typeof imported.totalXP!=="number")throw Error("Invalid backup");state={...state,...imported};save();toast("BACKUP IMPORTED")}catch(err){toast("Could not import that backup")}e.target.value=""});
 document.getElementById("resetData").addEventListener("click",()=>{if(confirm("Reset all Solo System progress? Export a backup first if you want to keep it.")){localStorage.removeItem(KEY);state={name:"A.R.S",examDate:"2026-12-06",capacity:360,rank:"F",totalXP:0,done:{},day:today(),todayXP:0,history:[],mockScores:[],dungeonsCleared:0,selectedDungeon:"E",generated:null,activeQuestIds:[]};QUESTS=[];save();toast("SYSTEM RESET")}});
 
-load();render();
+load();
+// Automatically create today's date-seeded quest set on first visit or when a new day is detected.
+// Existing quests and completion progress remain intact for the current day.
+if(!(state.activeQuestIds||[]).length){
+  generateTodaysQuests();
+}
+render();
 if("serviceWorker" in navigator && location.protocol.startsWith("http")) navigator.serviceWorker.register("./sw.js").catch(()=>{});
 </script>
 </body>
