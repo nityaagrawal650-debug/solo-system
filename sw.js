@@ -1,4 +1,4 @@
-const CACHE = "solo-system-v1";
-const FILES = ["./", "./index.html", "./manifest.json"];
-self.addEventListener("install", event => event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(FILES))));
-self.addEventListener("fetch", event => event.respondWith(caches.match(event.request).then(hit => hit || fetch(event.request))));
+const CACHE="solo-system-static-v2";
+self.addEventListener("install",e=>{self.skipWaiting()});
+self.addEventListener("activate",e=>{e.waitUntil(self.clients.claim())});
+self.addEventListener("fetch",e=>{if(e.request.method!=="GET")return;const u=new URL(e.request.url);if(u.origin!==self.location.origin)return;e.respondWith(fetch(e.request).catch(()=>caches.match(e.request))) });

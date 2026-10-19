@@ -1,10 +1,9 @@
 {
-  "name": "Solo System - Study Leveling App",
+  "name": "Solo System AI Mentor",
   "short_name": "Solo System",
-  "description": "Level up CLAT and CBSE Class 12 preparation with quests and dungeons.",
-  "start_url": "./index.html",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#080b15",
   "theme_color": "#090d1a",
-  "orientation": "portrait"
+  "description": "CLAT and CBSE study quests with an AI tutor."
 }
